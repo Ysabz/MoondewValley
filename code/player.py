@@ -8,6 +8,8 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos, group):
         super().__init__(group)
         self.import_assets()
+        self.tools = ['_hoe', '_axe', '_water']
+        self.tool_index = 0
         self.status = '_idle'
         self.action = 'down'
         self.frame_index = 0
@@ -25,6 +27,7 @@ class Player(pygame.sprite.Sprite):
         # timers
         self.timers = {
             'tool_use': Timer(350, self.use_tool),
+            'tool_switch': Timer(250)
         }
 
     def use_tool(self):
@@ -82,6 +85,13 @@ class Player(pygame.sprite.Sprite):
                 self.dir = pygame.math.Vector2()
                 self.frame_index = 0
 
+        # Change tool
+        if keys[pygame.K_q] and not self.timers['tool_switch'].active:
+            self.timers['tool_switch'].activate()
+            self.tool_index += 1
+            if self.tool_index >= len(self.tools):
+                self.tool_index = 0
+
     def move(self, dt):
         if self.dir.magnitude() > 0:
             self.dir = self.dir.normalize()
@@ -95,11 +105,10 @@ class Player(pygame.sprite.Sprite):
     def get_status(self):
         # if player is not moving it should be idle
         # TODO use enum for action
-        if self.dir.magnitude() == 0 and self.status != '_idle':
-            self.status = '_idle'
-
         if self.timers['tool_use'].active:
-            self.status = '_axe'
+            self.status = self.tools[self.tool_index]
+        elif self.dir.magnitude() == 0:
+            self.status = '_idle'
 
     def update_timer(self):
         for timer in self.timers.values():
