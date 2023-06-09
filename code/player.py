@@ -8,7 +8,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos, group):
         super().__init__(group)
         self.import_assets()
-        self.tools = ['_hoe', '_axe', '_water']
+        self.tools = ['hoe', 'axe', 'water']
         self.tool_index = 0
         self.status = '_idle'
         self.action = 'down'
@@ -27,11 +27,21 @@ class Player(pygame.sprite.Sprite):
         # timers
         self.timers = {
             'tool_use': Timer(350, self.use_tool),
-            'tool_switch': Timer(250)
+            'tool_switch': Timer(250),
+            'seed_use': Timer(350, self.use_seed),
+            'seed_switch': Timer(250)
         }
 
+        # seeds
+        self.seeds = ['corn', 'tomato']
+        self.seed_index = 0
+        self.selected_seed = self.seeds[self.seed_index]
+
+    def use_seed(self):
+        print("seed used1")
+
     def use_tool(self):
-        print(self.status)
+        print(self.status + "3")
 
     def import_assets(self):
         self.animations = {'up': [], 'down': [], 'left': [], 'right': [],
@@ -85,12 +95,28 @@ class Player(pygame.sprite.Sprite):
                 self.dir = pygame.math.Vector2()
                 self.frame_index = 0
 
-        # Change tool
-        if keys[pygame.K_q] and not self.timers['tool_switch'].active:
-            self.timers['tool_switch'].activate()
-            self.tool_index += 1
-            if self.tool_index >= len(self.tools):
-                self.tool_index = 0
+            # Change tool
+            if keys[pygame.K_q] and not self.timers['tool_switch'].active:
+                self.timers['tool_switch'].activate()
+                self.tool_index += 1
+                if self.tool_index >= len(self.tools):
+                    self.tool_index = 0
+
+            # seed use
+            if keys[pygame.K_LCTRL]:
+                self.timers['seed_use'].activate()
+                self.dir = pygame.math.Vector2()
+                self.frame_index = 0
+                print('use seed')
+
+            # change seed
+            if keys[pygame.K_e] and not self.timers['seed_switch'].active:
+                self.timers['seed_switch'].activate()
+                self.seed_index += 1
+                if self.seed_index >= len(self.seeds):
+                    self.seed_index = 0
+                self.selected_seed = self.seeds[self.seed_index]
+                print(self.selected_seed)
 
     def move(self, dt):
         if self.dir.magnitude() > 0:
@@ -106,7 +132,7 @@ class Player(pygame.sprite.Sprite):
         # if player is not moving it should be idle
         # TODO use enum for action
         if self.timers['tool_use'].active:
-            self.status = self.tools[self.tool_index]
+            self.status = "_" + self.tools[self.tool_index]
         elif self.dir.magnitude() == 0:
             self.status = '_idle'
 
