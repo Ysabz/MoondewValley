@@ -8,7 +8,7 @@ TILE_SIZE = 64
 # overlay positions
 OVERLAY_POSITIONS = {
     'tool': (40, SCREEN_HEIGHT - 15),
-    'seed': (70, SCREEN_HEIGHT - 5)}
+    'seed': (100, SCREEN_HEIGHT - 15)}
 
 PLAYER_TOOL_OFFSET = {
     'left': Vector2(-50, 40),
