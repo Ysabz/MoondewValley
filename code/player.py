@@ -1,11 +1,13 @@
 import pygame
+
 from settings import *
 from timer import Timer
 from util import *
 
 
+# Question why player is not inheriting the Generic?
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group):
+    def __init__(self, pos, group, collision_sprites):
         super().__init__(group)
         self.import_assets()
         self.tools = ['hoe', 'axe', 'water']
@@ -24,6 +26,10 @@ class Player(pygame.sprite.Sprite):
         # we use a different attribute for position because rect only store integer which does not work with delta time
         self.pos = pygame.math.Vector2(self.rect.center)
         self.speed = 200
+
+        # collision
+        self.collision_sprites = collision_sprites
+        self.hitbox = self.rect.copy().inflate((-126, -70))
 
         # timers
         self.timers = {
@@ -119,15 +125,38 @@ class Player(pygame.sprite.Sprite):
                 self.selected_seed = self.seeds[self.seed_index]
                 print(self.selected_seed)
 
+    def collision(self, dir):
+        for sprite in self.collision_sprites.sprites():
+            if hasattr(sprite, 'hitbox'):
+                if sprite.hitbox.colliderect(self.hitbox):
+                    if dir == 'horizontal':
+                        if self.dir.x > 0:  # moving to right
+                            self.hitbox.right = sprite.hitbox.left
+                        if self.dir.x < 0:  # moving to left
+                            self.hitbox.left = sprite.hitbox.right
+                        self.rect.centerx = self.hitbox.centerx
+                        self.pos.x = self.hitbox.centerx
+                    else:
+                        if self.dir.y > 0:  # moving  down
+                            self.hitbox.bottom = sprite.hitbox.top
+                        if self.dir.y < 0:  # moving  up
+                            self.hitbox.top = sprite.hitbox.bottom
+                        self.rect.centery = self.hitbox.centery
+                        self.pos.y = self.hitbox.centery
+
     def move(self, dt):
         if self.dir.magnitude() > 0:
             self.dir = self.dir.normalize()
         # horizontal movement
         self.pos.x += dt * self.speed * self.dir.x
-        self.rect.centerx = self.pos.x
+        self.hitbox.centerx = round(self.pos.x)
+        self.rect.centerx = self.hitbox.centerx
+        self.collision('horizontal')
         # vertical movement
         self.pos.y += dt * self.speed * self.dir.y
-        self.rect.centery = self.pos.y
+        self.hitbox.centery = round(self.pos.y)
+        self.rect.centery = self.hitbox.centery
+        self.collision('vertical')
 
     def get_status(self):
         # if player is not moving it should be idle

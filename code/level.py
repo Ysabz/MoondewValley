@@ -15,6 +15,7 @@ class Level:
 
         # sprite groups
         self.all_sprites = CameraGroup()
+        self.collision_sprites = pygame.sprite.Group()
 
         self.setup()
         self.overlay = Overlay(self.player)
@@ -34,7 +35,7 @@ class Level:
 
         # fence
         for x, y, surf in tmx_data.get_layer_by_name('Fence').tiles():
-            Generic((x * TILE_SIZE, y * TILE_SIZE), surf, self.all_sprites)
+            Generic((x * TILE_SIZE, y * TILE_SIZE), surf, [self.all_sprites, self.collision_sprites])
 
         # water ( is animated so we need to import all the frames)
         water_frames = import_folder('../graphics/water')
@@ -43,13 +44,13 @@ class Level:
 
         # trees
         for obj in tmx_data.get_layer_by_name('Trees'):
-            Tree((obj.x, obj.y), obj.image, self.all_sprites, obj.name)
+            Tree((obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites], obj.name)
 
         # wildflowers
         for obj in tmx_data.get_layer_by_name('Decoration'):
-            WildFlower((obj.x, obj.y), obj.image, self.all_sprites)
+            WildFlower((obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites])
 
-        self.player = Player((640, 360), self.all_sprites)
+        self.player = Player((640, 360), self.all_sprites, self.collision_sprites)
         Generic((0, 0), pygame.image.load('../graphics/world/ground.png').convert_alpha(), self.all_sprites,
                 LAYERS['ground'])
 
@@ -72,8 +73,8 @@ class CameraGroup(pygame.sprite.Group):
         # this vector is used (in reverse direction (-)) to draw everything else in the map
         self.offset.x = player.rect.centerx - SCREEN_WIDTH / 2
         self.offset.y = player.rect.centery - SCREEN_HEIGHT / 2
-        # use the layer to draw sprites in the correct depth order
-        # use sort to sort itemes based on their y position for the behind/front effect -> items with lower y -> behind -> so drawn first
+        # use the layer to draw sprites in the correct depth order use sort to sort items based on their y position
+        # for the behind/front effect -> items with lower y -> behind -> so drawn first
         for layer in LAYERS.values():
             for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
                 if sprite.z == layer:
