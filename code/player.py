@@ -5,24 +5,25 @@ from timer import Timer
 from util import *
 
 
+# TODO what if player detecting collision, items detect collision so we don't need to loop through them to find which one was hit by player
 # Question why player is not inheriting the Generic?
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group, collision_sprites):
+    def __init__(self, pos, group, collision_sprites, tree_sprites):
         super().__init__(group)
         self.import_assets()
         self.tools = ['hoe', 'axe', 'water']
         self.tool_index = 0
         self.status = '_idle'
-        self.action = 'down'
+        self.dir = 'down'
         self.frame_index = 0
 
         # general attributes
-        self.image = self.animations[self.action + self.status][self.frame_index]
+        self.image = self.animations[self.dir + self.status][self.frame_index]
         self.rect = self.image.get_rect(center=pos)
         self.z = LAYERS['main']
 
         # movement attributes
-        self.dir = pygame.math.Vector2()
+        self.dir_vec = pygame.math.Vector2()
         # we use a different attribute for position because rect only store integer which does not work with delta time
         self.pos = pygame.math.Vector2(self.rect.center)
         self.speed = 200
@@ -44,11 +45,24 @@ class Player(pygame.sprite.Sprite):
         self.seed_index = 0
         self.selected_seed = self.seeds[self.seed_index]
 
+        # interaction
+        self.tree_sprites = tree_sprites
+
+    def get_target_pos(self):
+        self.target_pos = self.rect.center + PLAYER_TOOL_OFFSET[self.dir]
+
     def use_seed(self):
         print("seed used1")
 
     def use_tool(self):
-        print(self.status + "3")
+        if self.tools[self.tool_index] == 'hoe':
+            pass
+        elif self.tools[self.tool_index] == 'axe':
+            for tree in self.tree_sprites.sprites():
+                if tree.rect.collidepoint(self.target_pos):
+                    tree.damage()
+        elif self.tools[self.tool_index] == 'water':
+            pass
 
     def import_assets(self):
         self.animations = {'up': [], 'down': [], 'left': [], 'right': [],
@@ -62,44 +76,44 @@ class Player(pygame.sprite.Sprite):
 
     def animate(self, dt):
         self.frame_index += 4 * dt
-        if self.frame_index >= len(self.animations[self.action + self.status]):
+        if self.frame_index >= len(self.animations[self.dir + self.status]):
             self.frame_index = 0
-        self.image = self.animations[self.action + self.status][int(self.frame_index)]
+        self.image = self.animations[self.dir + self.status][int(self.frame_index)]
 
     def input(self):
         keys = pygame.key.get_pressed()
         if not self.timers['tool_use'].active:
             # vertical movement
             if keys[pygame.K_UP]:
-                self.dir.y = -1
-                self.action = 'up'
+                self.dir_vec.y = -1
+                self.dir = 'up'
                 self.status = ''
             elif keys[pygame.K_DOWN]:
-                self.dir.y = 1
-                self.action = 'down'
+                self.dir_vec.y = 1
+                self.dir = 'down'
                 self.status = ''
 
             else:
-                self.dir.y = 0
+                self.dir_vec.y = 0
 
             # horizontal movement
             if keys[pygame.K_LEFT]:
-                self.dir.x = -1
-                self.action = 'left'
+                self.dir_vec.x = -1
+                self.dir = 'left'
                 self.status = ''
             elif keys[pygame.K_RIGHT]:
-                self.dir.x = 1
-                self.action = 'right'
+                self.dir_vec.x = 1
+                self.dir = 'right'
                 self.status = ''
 
             else:
-                self.dir.x = 0
+                self.dir_vec.x = 0
 
             # Tool use
             if keys[pygame.K_SPACE]:
                 # timer for tool use
                 self.timers['tool_use'].activate()
-                self.dir = pygame.math.Vector2()
+                self.dir_vec = pygame.math.Vector2()
                 self.frame_index = 0
 
             # Change tool
@@ -112,7 +126,7 @@ class Player(pygame.sprite.Sprite):
             # seed use
             if keys[pygame.K_LCTRL]:
                 self.timers['seed_use'].activate()
-                self.dir = pygame.math.Vector2()
+                self.dir_vec = pygame.math.Vector2()
                 self.frame_index = 0
                 print('use seed')
 
@@ -130,30 +144,30 @@ class Player(pygame.sprite.Sprite):
             if hasattr(sprite, 'hitbox'):
                 if sprite.hitbox.colliderect(self.hitbox):
                     if dir == 'horizontal':
-                        if self.dir.x > 0:  # moving to right
+                        if self.dir_vec.x > 0:  # moving to right
                             self.hitbox.right = sprite.hitbox.left
-                        if self.dir.x < 0:  # moving to left
+                        if self.dir_vec.x < 0:  # moving to left
                             self.hitbox.left = sprite.hitbox.right
                         self.rect.centerx = self.hitbox.centerx
                         self.pos.x = self.hitbox.centerx
                     else:
-                        if self.dir.y > 0:  # moving  down
+                        if self.dir_vec.y > 0:  # moving  down
                             self.hitbox.bottom = sprite.hitbox.top
-                        if self.dir.y < 0:  # moving  up
+                        if self.dir_vec.y < 0:  # moving  up
                             self.hitbox.top = sprite.hitbox.bottom
                         self.rect.centery = self.hitbox.centery
                         self.pos.y = self.hitbox.centery
 
     def move(self, dt):
-        if self.dir.magnitude() > 0:
-            self.dir = self.dir.normalize()
+        if self.dir_vec.magnitude() > 0:
+            self.dir_vec = self.dir_vec.normalize()
         # horizontal movement
-        self.pos.x += dt * self.speed * self.dir.x
+        self.pos.x += dt * self.speed * self.dir_vec.x
         self.hitbox.centerx = round(self.pos.x)
         self.rect.centerx = self.hitbox.centerx
         self.collision('horizontal')
         # vertical movement
-        self.pos.y += dt * self.speed * self.dir.y
+        self.pos.y += dt * self.speed * self.dir_vec.y
         self.hitbox.centery = round(self.pos.y)
         self.rect.centery = self.hitbox.centery
         self.collision('vertical')
@@ -163,7 +177,7 @@ class Player(pygame.sprite.Sprite):
         # TODO use enum for action
         if self.timers['tool_use'].active:
             self.status = "_" + self.tools[self.tool_index]
-        elif self.dir.magnitude() == 0:
+        elif self.dir_vec.magnitude() == 0:
             self.status = '_idle'
 
     def update_timer(self):
@@ -176,3 +190,4 @@ class Player(pygame.sprite.Sprite):
         self.animate(dt)
         self.get_status()
         self.update_timer()
+        self.get_target_pos()
