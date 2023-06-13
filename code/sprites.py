@@ -59,11 +59,12 @@ class Particle(Generic):
         if current_time - self.start_time > self.duration:
             self.kill()
 
-
+# TODO playr_add is basically a call back. if the collision is detected by each item independenly they can call the callback function when needed
 class Tree(Generic):
-    def __init__(self, pos, surf, groups, name, all_sprites):
+    def __init__(self, pos, surf, groups, name, all_sprites, player_add):
         super().__init__(pos, surf, groups)
         self.all_sprites = all_sprites
+        self.player_add = player_add
         # tree attributes
         self.health = 5
         self.alive = True
@@ -77,6 +78,8 @@ class Tree(Generic):
         self.apple_sprites = pygame.sprite.Group()
         self.create_fruit()
 
+        self.player_add = player_add
+
     # TODO fix the problem when multiple trees are being hit at the same time
     def damage(self):
         self.health -= 1
@@ -85,6 +88,7 @@ class Tree(Generic):
             random_apple = choice(self.apple_sprites.sprites())
             Particle(random_apple.rect.topleft, random_apple.image, self.all_sprites, LAYERS['fruit'])
             random_apple.kill()
+            self.player_add('apple')
 
     def check_health(self):
         if self.health <= 0:
@@ -93,6 +97,7 @@ class Tree(Generic):
             self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
             self.hitbox = self.rect.copy().inflate(-10, -self.rect.height * 0.6)
             Particle(self.rect.topleft, self.image, self.all_sprites, LAYERS['fruit'], 300)
+            self.player_add('wood')
 
     def create_fruit(self):
         for pos in self.apple_pos:

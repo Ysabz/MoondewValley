@@ -5,8 +5,10 @@ from timer import Timer
 from util import *
 
 
-# TODO what if player detecting collision, items detect collision so we don't need to loop through them to find which one was hit by player
-# Question why player is not inheriting the Generic?
+# TODO what if instead of player detecting collision, items detect collision so we don't need to loop through them to
+#  find which one was hit by player
+#  Question why player is not inheriting the Generic?
+# TODO Player already has access to tree sprites so why using the level as an intermediary?
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, group, collision_sprites, tree_sprites):
         super().__init__(group)
@@ -44,6 +46,9 @@ class Player(pygame.sprite.Sprite):
         self.seeds = ['corn', 'tomato']
         self.seed_index = 0
         self.selected_seed = self.seeds[self.seed_index]
+
+        # inventory
+        self.item_inventory = {'wood': 0, 'apple': 0, 'corn': 0, 'tomato': 0}
 
         # interaction
         self.tree_sprites = tree_sprites
