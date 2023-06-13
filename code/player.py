@@ -11,7 +11,7 @@ from util import *
 #  Question why player is not inheriting the Generic?
 # TODO Player already has access to tree sprites so why using the level as an intermediary?
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group, collision_sprites, tree_sprites, interaction_sprite):
+    def __init__(self, pos, group, collision_sprites, tree_sprites, interaction_sprite, soil_layer):
         super().__init__(group)
         self.import_assets()
         self.tools = ['hoe', 'axe', 'water']
@@ -55,6 +55,7 @@ class Player(pygame.sprite.Sprite):
         self.tree_sprites = tree_sprites
         self.interaction_sprites = interaction_sprite
         self.sleep = False
+        self.soil_layer = soil_layer
 
     def get_target_pos(self):
         self.target_pos = self.rect.center + PLAYER_TOOL_OFFSET[self.dir]
@@ -64,7 +65,7 @@ class Player(pygame.sprite.Sprite):
 
     def use_tool(self):
         if self.tools[self.tool_index] == 'hoe':
-            pass
+            self.soil_layer.get_hit(self.target_pos)
         elif self.tools[self.tool_index] == 'axe':
             for tree in self.tree_sprites.sprites():
                 if tree.rect.collidepoint(self.target_pos):
