@@ -5,12 +5,13 @@ from timer import Timer
 from util import *
 
 
+# TODO have a sprite class that all interactable sprites inherit from
 # TODO what if instead of player detecting collision, items detect collision so we don't need to loop through them to
 #  find which one was hit by player
 #  Question why player is not inheriting the Generic?
 # TODO Player already has access to tree sprites so why using the level as an intermediary?
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group, collision_sprites, tree_sprites):
+    def __init__(self, pos, group, collision_sprites, tree_sprites, interaction_sprite):
         super().__init__(group)
         self.import_assets()
         self.tools = ['hoe', 'axe', 'water']
@@ -52,6 +53,8 @@ class Player(pygame.sprite.Sprite):
 
         # interaction
         self.tree_sprites = tree_sprites
+        self.interaction_sprites = interaction_sprite
+        self.sleep = False
 
     def get_target_pos(self):
         self.target_pos = self.rect.center + PLAYER_TOOL_OFFSET[self.dir]
@@ -87,7 +90,7 @@ class Player(pygame.sprite.Sprite):
 
     def input(self):
         keys = pygame.key.get_pressed()
-        if not self.timers['tool_use'].active:
+        if not self.timers['tool_use'].active and not self.sleep:
             # vertical movement
             if keys[pygame.K_UP]:
                 self.dir_vec.y = -1
@@ -143,6 +146,17 @@ class Player(pygame.sprite.Sprite):
                     self.seed_index = 0
                 self.selected_seed = self.seeds[self.seed_index]
                 print(self.selected_seed)
+
+            # detecting key press and collison with the interaction group
+            if keys[pygame.K_RETURN]:
+                collided_interaction_sprite = pygame.sprite.spritecollide(self, self.interaction_sprites, False)
+                if collided_interaction_sprite:
+                    if collided_interaction_sprite[0].name == 'Trade':
+                        pass
+                    elif collided_interaction_sprite[0].name == 'Bed':
+                        self.status = '_idle'
+                        self.dir = 'left'
+                        self.sleep = True
 
     def collision(self, dir):
         for sprite in self.collision_sprites.sprites():

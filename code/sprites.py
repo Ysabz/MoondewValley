@@ -17,6 +17,13 @@ class Generic(pygame.sprite.Sprite):
         self.hitbox = self.rect.copy().inflate(-self.rect.width * 0.2, -self.rect.height * 0.75)
 
 
+class Interaction(Generic):
+    def __init__(self, pos, size, groups, name):
+        surf = pygame.Surface(size)
+        super().__init__(pos, surf, groups)
+        self.name = name
+
+
 # water is animated
 class Water(Generic):
     def __init__(self, pos, frames, groups):
@@ -58,6 +65,7 @@ class Particle(Generic):
         current_time = pygame.time.get_ticks()
         if current_time - self.start_time > self.duration:
             self.kill()
+
 
 # TODO playr_add is basically a call back. if the collision is detected by each item independenly they can call the callback function when needed
 class Tree(Generic):
