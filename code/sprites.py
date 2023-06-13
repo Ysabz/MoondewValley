@@ -61,9 +61,9 @@ class Particle(Generic):
 
 
 class Tree(Generic):
-    def __init__(self, pos, surf, groups, name):
+    def __init__(self, pos, surf, groups, name, all_sprites):
         super().__init__(pos, surf, groups)
-
+        self.all_sprites = all_sprites
         # tree attributes
         self.health = 5
         self.alive = True
@@ -77,12 +77,13 @@ class Tree(Generic):
         self.apple_sprites = pygame.sprite.Group()
         self.create_fruit()
 
+    # TODO fix the problem when multiple trees are being hit at the same time
     def damage(self):
         self.health -= 1
         # remove apple when the tree is hit
         if len(self.apple_sprites.sprites()) > 0:
             random_apple = choice(self.apple_sprites.sprites())
-            Particle(random_apple.rect.topleft, random_apple.image, self.groups()[0], LAYERS['fruit'])
+            Particle(random_apple.rect.topleft, random_apple.image, self.all_sprites, LAYERS['fruit'])
             random_apple.kill()
 
     def check_health(self):
@@ -91,14 +92,14 @@ class Tree(Generic):
             self.image = self.stump_surf
             self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
             self.hitbox = self.rect.copy().inflate(-10, -self.rect.height * 0.6)
+            Particle(self.rect.topleft, self.image, self.all_sprites, LAYERS['fruit'], 300)
 
     def create_fruit(self):
         for pos in self.apple_pos:
             if randint(0, 10) < 2:
                 x = pos[0] + self.rect.left
                 y = pos[1] + self.rect.top
-                # TODO this needs a cleaner way to get the all_sprites group
-                Generic((x, y), self.apple_surf, [self.apple_sprites, self.groups()[0]], LAYERS['fruit'])
+                Generic((x, y), self.apple_surf, [self.apple_sprites, self.all_sprites], LAYERS['fruit'])
 
     def update(self, dt):
         if self.alive:
