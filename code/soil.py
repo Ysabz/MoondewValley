@@ -1,16 +1,11 @@
+from random import choice
+
 import pygame
 from pytmx.util_pygame import load_pygame
 
 from settings import *
-from util import import_folder_dict
-
-
-class SoilTile(pygame.sprite.Sprite):
-    def __init__(self, pos, surf, groups):
-        super().__init__(groups)
-        self.image = surf
-        self.rect = self.image.get_rect(topleft=pos)
-        self.z = LAYERS['soil']
+from sprites import Generic
+from util import import_folder_dict, import_folder
 
 
 class SoilLayer:
@@ -18,10 +13,12 @@ class SoilLayer:
         # sprite groups
         self.all_sprites = all_sprites
         self.soil_sprites = pygame.sprite.Group()
+        self.water_sprites = pygame.sprite.Group()
 
         # graphics
         self.soil_surf = pygame.image.load('../graphics/soil/o.png')
         self.soil_surfs = import_folder_dict('../graphics/soil/')
+        self.water_surfs = import_folder('../graphics/soil_water/')
 
         self.create_soil_grid()
         self.create_hit_rects()
@@ -62,6 +59,29 @@ class SoilLayer:
                     self.grid[y][x].append('X')
                     self.create_soil_tiles()
 
+    # Question should it be possible to rewater the same spot?
+    # TODO instead of appending a string, check for boolean flags ? create a soil object with those flags
+    def water(self, target_pos):
+        for soil_sprite in self.soil_sprites.sprites():
+            if soil_sprite.rect.collidepoint(target_pos):
+                x = soil_sprite.rect.x // TILE_SIZE
+                y = soil_sprite.rect.y // TILE_SIZE
+                self.grid[y][x].append('W')
+                water_surf = choice(self.water_surfs)
+                Generic(soil_sprite.rect.topleft, water_surf, [self.all_sprites, self.water_sprites],
+                        LAYERS['soil water'])
+
+    def remove_water(self):
+        # destroy all the water sprites
+        for sprite in self.water_sprites.sprites():
+            sprite.kill()
+
+        # cleanup the grid
+        for row in self.grid:
+            for cell in row:
+                if 'W' in cell:
+                    cell.remove('W')
+
     def create_soil_tiles(self):
         # draw from scratch so we can connect patches that are adjacent
         self.soil_sprites.empty()
@@ -86,11 +106,14 @@ class SoilLayer:
                     if l: tile_type += 'l'
                     if r: tile_type += 'r'
                     if not all((t, b, l, r)) and any(
-                            (all((t, b, l)), all((t, b, r)), all((b, l, r)), all((t, l, r)))) and x: tile_type += 'x'
+                            (
+                                    all((t, b, l)), all((t, b, r)), all((b, l, r)),
+                                    all((t, l, r)))) and x: tile_type += 'x'
 
                     if not any((t, b, l, r)):
                         tile_type = 'o'
 
                     x = index_col * TILE_SIZE
                     y = index_row * TILE_SIZE
-                    SoilTile((x, y), self.soil_surfs[tile_type], [self.all_sprites, self.soil_sprites])
+                    Generic((x, y), self.soil_surfs[tile_type], [self.all_sprites, self.soil_sprites],
+                            LAYERS['soil'])

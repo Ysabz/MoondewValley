@@ -81,6 +81,9 @@ class Level:
         self.player.item_inventory[item] += 1
 
     def reset(self):
+        # soil
+        self.soil_layer.remove_water()
+
         # trees (apples regrow) if the tree is not cut down
         for tree in self.tree_sprites.sprites():
             if tree.alive:
