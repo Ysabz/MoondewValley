@@ -2,6 +2,7 @@ import pygame
 from pytmx.util_pygame import load_pygame
 
 from settings import *
+from util import import_folder_dict
 
 
 class SoilTile(pygame.sprite.Sprite):
@@ -20,6 +21,7 @@ class SoilLayer:
 
         # graphics
         self.soil_surf = pygame.image.load('../graphics/soil/o.png')
+        self.soil_surfs = import_folder_dict('../graphics/soil/')
 
         self.create_soil_grid()
         self.create_hit_rects()
@@ -61,10 +63,34 @@ class SoilLayer:
                     self.create_soil_tiles()
 
     def create_soil_tiles(self):
+        # draw from scratch so we can connect patches that are adjacent
         self.soil_sprites.empty()
         for index_row, row in enumerate(self.grid):
             for index_col, cell in enumerate(row):
                 if 'X' in cell:
+                    # tile options
+                    # TODO fix the out of bound error?
+                    # Fix the tile naming for a more efficient tile finding
+                    t = 'X' in self.grid[index_row - 1][index_col]
+                    b = 'X' in self.grid[index_row + 1][index_col]
+                    r = 'X' in row[index_col + 1]
+                    l = 'X' in row[index_col - 1]
+                    x = 'X' in self.grid[index_row - 1][index_col - 1] or 'X' in self.grid[index_row - 1][
+                        index_col + 1] or 'X' in self.grid[index_row + 1][index_col - 1] or 'X' in \
+                        self.grid[index_row + 1][index_col + 1]
+
+                    tile_type = ''
+
+                    if t: tile_type += 't'
+                    if b: tile_type += 'b'
+                    if l: tile_type += 'l'
+                    if r: tile_type += 'r'
+                    if not all((t, b, l, r)) and any(
+                            (all((t, b, l)), all((t, b, r)), all((b, l, r)), all((t, l, r)))) and x: tile_type += 'x'
+
+                    if not any((t, b, l, r)):
+                        tile_type = 'o'
+
                     x = index_col * TILE_SIZE
                     y = index_row * TILE_SIZE
-                    SoilTile((x, y), self.soil_surf, [self.all_sprites, self.soil_sprites])
+                    SoilTile((x, y), self.soil_surfs[tile_type], [self.all_sprites, self.soil_sprites])
