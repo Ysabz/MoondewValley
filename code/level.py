@@ -74,7 +74,7 @@ class Level:
         for obj in tmx_data.get_layer_by_name('Player'):
             if obj.name == 'Start':
                 self.player = Player(
-                    (obj.x, obj.y), self.all_sprites, self.collision_sprites, self.tree_sprites,
+                    (obj.x, obj.y), self.all_sprites, self.all_sprites, self.collision_sprites, self.tree_sprites,
                     self.interaction_sprites, self.soil_layer)
 
             if obj.name == 'Bed':

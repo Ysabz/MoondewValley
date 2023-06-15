@@ -1,6 +1,7 @@
 import pygame
 
 from settings import *
+from sprites import Particle
 from timer import Timer
 from util import *
 
@@ -11,8 +12,9 @@ from util import *
 #  Question why player is not inheriting the Generic?
 # TODO Player already has access to tree sprites so why using the level as an intermediary?
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group, collision_sprites, tree_sprites, interaction_sprite, soil_layer):
+    def __init__(self, pos, group, all_sprites, collision_sprites, tree_sprites, interaction_sprite, soil_layer):
         super().__init__(group)
+        self.all_sprites = all_sprites
         self.import_assets()
         self.tools = ['hoe', 'axe', 'water']
         self.tool_index = 0
@@ -157,11 +159,23 @@ class Player(pygame.sprite.Sprite):
                         self.status = '_idle'
                         self.dir = 'left'
                         self.sleep = True
+            # harvest
+            if keys[pygame.K_h]:
+                collided_plant_sprite = pygame.sprite.spritecollide(self, self.soil_layer.plant_sprites, False)
+                if collided_plant_sprite and collided_plant_sprite[0].fully_grown:
+                    self.item_inventory[collided_plant_sprite[0].type] += 1
+                    Particle(collided_plant_sprite[0].rect.topleft, collided_plant_sprite[0].image, self.all_sprites,
+                             LAYERS['main'])
+                    self.soil_layer.grid[collided_plant_sprite[0].pos.y // TILE_SIZE][
+                        collided_plant_sprite[0].pos.x // TILE_SIZE].remove('P')
+                    collided_plant_sprite[0].kill()
 
     def collision(self, dir):
         for sprite in self.collision_sprites.sprites():
             if hasattr(sprite, 'hitbox'):
                 if sprite.hitbox.colliderect(self.hitbox):
+                    # check for plants that are hit
+
                     if dir == 'horizontal':
                         if self.dir_vec.x > 0:  # moving to right
                             self.hitbox.right = sprite.hitbox.left

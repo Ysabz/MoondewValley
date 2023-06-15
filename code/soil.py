@@ -15,6 +15,7 @@ class Plant(Generic):
         # For now, we update the seed everyday
 
         path = f'../graphics/fruit/{seed_type}/'
+        self.type = seed_type
         self.pos = pos_rect
         self.frames = import_folder(path)
         self.grow_speed = GROW_SPEED[seed_type]
@@ -30,15 +31,11 @@ class Plant(Generic):
             self.age += self.grow_speed
             self.image = self.frames[int(self.age)]
             self.rect = self.image.get_rect(center=self.pos.center)
-            if self.age >= len(self.frames):
+            if self.age >= len(self.frames) - 1:
                 self.fully_grown = True
             if int(self.age) > 0:
                 self.z = LAYERS['main']
                 self.hitbox = self.rect.copy().inflate(-26, -self.rect.height * 0.4)
-
-    def harvest(self):
-        if self.fully_grown:
-            self.sprite.kill()
 
 
 class SoilLayer:
