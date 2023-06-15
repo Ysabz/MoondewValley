@@ -61,7 +61,7 @@ class Player(pygame.sprite.Sprite):
         self.target_pos = self.rect.center + PLAYER_TOOL_OFFSET[self.dir]
 
     def use_seed(self):
-        print("seed used1")
+        self.soil_layer.plant_seed(self.target_pos, self.selected_seed)
 
     def use_tool(self):
         if self.tools[self.tool_index] == 'hoe':
@@ -137,7 +137,6 @@ class Player(pygame.sprite.Sprite):
                 self.timers['seed_use'].activate()
                 self.dir_vec = pygame.math.Vector2()
                 self.frame_index = 0
-                print('use seed')
 
             # change seed
             if keys[pygame.K_e] and not self.timers['seed_switch'].active:

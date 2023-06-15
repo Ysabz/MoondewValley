@@ -11,6 +11,7 @@ from transition import Transition
 from util import *
 
 
+# make rain random after reset instead of using input
 class Level:
     def __init__(self):
         # get the display surface
@@ -88,6 +89,7 @@ class Level:
     def reset(self):
         # soil
         self.soil_layer.remove_water()
+        self.soil_layer.grow_seeds()
 
         # trees (apples regrow) if the tree is not cut down
         for tree in self.tree_sprites.sprites():

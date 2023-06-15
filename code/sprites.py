@@ -7,10 +7,13 @@ from timer import Timer
 
 
 class Generic(pygame.sprite.Sprite):
-    def __init__(self, pos, surf, groups, z=LAYERS['main']):
+    def __init__(self, pos, surf, groups, z=LAYERS['main'], is_centered=False):
         super().__init__(groups)
         self.image = surf
-        self.rect = self.image.get_rect(topleft=pos)
+        if is_centered:
+            self.rect = self.image.get_rect(center=pos)
+        else:
+            self.rect = self.image.get_rect(topleft=pos)
         self.z = z
         # we don't want to shrink too much in horizontal but in vertical we want a higher shrink otherwise the
         # character is unable to go behind object (e.g sunflower)
