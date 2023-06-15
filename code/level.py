@@ -4,6 +4,7 @@ from pytmx.util_pygame import load_pygame
 from overlay import Overlay
 from player import Player
 from settings import *
+from sky import Rain
 from soil import SoilLayer
 from sprites import Generic, Water, WildFlower, Tree, Interaction
 from transition import Transition
@@ -25,6 +26,10 @@ class Level:
         self.setup()
         self.overlay = Overlay(self.player)
         self.transition = Transition(self.reset, self.player)
+
+        # sky
+        self.rain = Rain(self.all_sprites)
+        self.raining = True
 
     def setup(self):
         tmx_data = load_pygame('../data/map.tmx')
@@ -93,6 +98,7 @@ class Level:
                 tree.create_fruit()
 
     def run(self, dt):
+        keys = pygame.key.get_pressed()
         self.display_surface.fill('black')
         # self.all_sprites.draw(self.display_surface)
         self.all_sprites.custom_draw(self.player)
@@ -100,6 +106,17 @@ class Level:
         self.overlay.display()
         if self.player.sleep:
             self.transition.play()
+
+        # rain control
+        if keys[pygame.K_r] and not self.raining:
+            self.raining = True
+
+        if keys[pygame.K_s] and self.raining:
+            self.raining = False
+
+        if self.raining:
+            self.rain.update()
+            self.soil_layer.water_all()
 
 
 class CameraGroup(pygame.sprite.Group):

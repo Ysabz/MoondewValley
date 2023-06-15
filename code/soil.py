@@ -47,6 +47,7 @@ class SoilLayer:
                     soil_rect = pygame.Rect(x, y, TILE_SIZE, TILE_SIZE)
                     self.hit_rects.append(soil_rect)
 
+    # Question shouldn't we return or break once we find the colliding point?
     def get_hit(self, point):
         for rect in self.hit_rects:
             if rect.collidepoint(point):
@@ -66,10 +67,24 @@ class SoilLayer:
             if soil_sprite.rect.collidepoint(target_pos):
                 x = soil_sprite.rect.x // TILE_SIZE
                 y = soil_sprite.rect.y // TILE_SIZE
-                self.grid[y][x].append('W')
-                water_surf = choice(self.water_surfs)
-                Generic(soil_sprite.rect.topleft, water_surf, [self.all_sprites, self.water_sprites],
-                        LAYERS['soil water'])
+                if 'W' not in self.grid[y][x]:
+                    self.grid[y][x].append('W')
+                    water_surf = choice(self.water_surfs)
+                    Generic(soil_sprite.rect.topleft, water_surf, [self.all_sprites, self.water_sprites],
+                            LAYERS['soil water'])
+
+    def water_all(self):
+
+        # Question why not going through soil_sprites instead of going through the whole grid?
+        for index_row, row in enumerate(self.grid):
+            for index_col, cell in enumerate(row):
+                # reminder 'X' mean there is a soil patch
+                if 'X' in cell and 'W' not in cell:
+                    cell.append('W')
+                    water_surf = choice(self.water_surfs)
+                    Generic((index_col * TILE_SIZE, index_row * TILE_SIZE), water_surf,
+                            [self.all_sprites, self.water_sprites],
+                            LAYERS['soil water'])
 
     def remove_water(self):
         # destroy all the water sprites
