@@ -8,37 +8,41 @@ from sprites import Generic
 from util import import_folder_dict, import_folder
 
 
-class Seed:
-    def __init__(self, pos_rect, groups, seed_type):
+class Plant:
+    def __init__(self, pos_rect, groups, seed_type, check_watered):
         # seed needs to watered everyday for growth
         # For now, we update the seed everyday
         path = f'../graphics/fruit/{seed_type}/'
         self.pos = pos_rect
-        self.seed_surfs = import_folder(path)
+        self.frames = import_folder(path)
+        self.grow_speed = GROW_SPEED[seed_type]
         self.fully_grown = False
-        self.sprite_index = 0
-        self.is_watered = False
-        self.sprite = Generic(pos_rect.center, self.seed_surfs[0], groups, LAYERS['ground plant'], True)
+        self.age = 0
+        self.check_watered = check_watered
+        self.sprite = Generic(pos_rect.center, self.frames[0], groups, LAYERS['ground plant'], True)
 
     def grow(self):
         # if not fully grown and watered
-        if not self.fully_grown and self.is_watered:
-            self.is_watered = False
-            self.sprite_index += 1
-            if self.sprite_index >= len(self.seed_surfs):
+        if not self.fully_grown and self.check_watered(self.pos):
+            # TODO need to call this function before reseting all the watering
+            self.age += self.grow_speed
+            self.sprite.image = self.frames[int(self.age)]
+            self.sprite.rect = self.sprite.image.get_rect(center=self.pos.center)
+            if self.age >= len(self.frames):
                 self.fully_grown = True
-            else:
-                self.sprite.image = self.seed_surfs[self.sprite_index]
-                self.sprite.rect = self.sprite.image.get_rect(center=self.pos.center)
+            if int(self.age) > 0:
+                self.sprite.z = LAYERS['main']
+                self.sprite.hitbox = self.sprite.rect.copy().inflate(-26, -self.sprite.rect.height * 0.4)
 
 
 class SoilLayer:
-    def __init__(self, all_sprites):
+    def __init__(self, all_sprites, collision_sprites):
         # sprite groups
         self.all_sprites = all_sprites
+        self.collision_sprites = collision_sprites
         self.soil_sprites = pygame.sprite.Group()
         self.water_sprites = pygame.sprite.Group()
-        self.seeds = []
+        self.plants = []
 
         # graphics
         self.soil_surf = pygame.image.load('../graphics/soil/o.png')
@@ -97,9 +101,6 @@ class SoilLayer:
                     water_surf = choice(self.water_surfs)
                     Generic(soil_sprite.rect.topleft, water_surf, [self.all_sprites, self.water_sprites],
                             LAYERS['soil water'])
-                if 'S' in self.grid[y][x]:
-                    # find the seed object and water it
-                    self.water_seed(soil_sprite.rect)
 
     def water_all(self):
         # Question why not going through soil_sprites instead of going through the whole grid?
@@ -112,8 +113,6 @@ class SoilLayer:
                     Generic((index_col * TILE_SIZE, index_row * TILE_SIZE), water_surf,
                             [self.all_sprites, self.water_sprites],
                             LAYERS['soil water'])
-        for seed in self.seeds:
-            seed.is_watered = True
 
     def remove_water(self):
         # destroy all the water sprites
@@ -132,19 +131,22 @@ class SoilLayer:
             if soil_sprite.rect.collidepoint(target_pos):
                 x = soil_sprite.rect.x // TILE_SIZE
                 y = soil_sprite.rect.y // TILE_SIZE
-                if 'S' not in self.grid[y][x]:
-                    self.seeds.append(Seed(soil_sprite.rect, [self.all_sprites], seed_type))
-                    # mark the soil as containing a seed
-                    self.grid[y][x].append('S')
+                if 'P' not in self.grid[y][x]:
+                    self.plants.append(Plant(soil_sprite.rect, [self.all_sprites, self.collision_sprites], seed_type,
+                                             self.check_watered))
+                    # mark the soil as containing a plant
+                    self.grid[y][x].append('P')
 
-    def water_seed(self, pos):
-        for seed in self.seeds:
-            if seed.pos == pos:
-                seed.is_watered = True
+    def grow_plants(self):
+        for plant in self.plants:
+            plant.grow()
 
-    def grow_seeds(self):
-        for seed in self.seeds:
-            seed.grow()
+    def check_watered(self, soil_patch_pos):
+        x = soil_patch_pos.x // TILE_SIZE
+        y = soil_patch_pos.y // TILE_SIZE
+        cell = self.grid[y][x]
+        is_watered = 'W' in cell
+        return is_watered
 
     def create_soil_tiles(self):
         # draw from scratch so we can connect patches that are adjacent
