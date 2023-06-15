@@ -8,10 +8,12 @@ from sprites import Generic
 from util import import_folder_dict, import_folder
 
 
-class Plant:
+# TODO check if player collided with a fully grown plan and pressed H
+class Plant(Generic):
     def __init__(self, pos_rect, groups, seed_type, check_watered):
         # seed needs to watered everyday for growth
         # For now, we update the seed everyday
+
         path = f'../graphics/fruit/{seed_type}/'
         self.pos = pos_rect
         self.frames = import_folder(path)
@@ -19,20 +21,24 @@ class Plant:
         self.fully_grown = False
         self.age = 0
         self.check_watered = check_watered
-        self.sprite = Generic(pos_rect.center, self.frames[0], groups, LAYERS['ground plant'], True)
+        super().__init__(pos_rect.center, self.frames[self.age], groups, LAYERS['ground plant'], True)
 
     def grow(self):
         # if not fully grown and watered
         if not self.fully_grown and self.check_watered(self.pos):
             # TODO need to call this function before reseting all the watering
             self.age += self.grow_speed
-            self.sprite.image = self.frames[int(self.age)]
-            self.sprite.rect = self.sprite.image.get_rect(center=self.pos.center)
+            self.image = self.frames[int(self.age)]
+            self.rect = self.image.get_rect(center=self.pos.center)
             if self.age >= len(self.frames):
                 self.fully_grown = True
             if int(self.age) > 0:
-                self.sprite.z = LAYERS['main']
-                self.sprite.hitbox = self.sprite.rect.copy().inflate(-26, -self.sprite.rect.height * 0.4)
+                self.z = LAYERS['main']
+                self.hitbox = self.rect.copy().inflate(-26, -self.rect.height * 0.4)
+
+    def harvest(self):
+        if self.fully_grown:
+            self.sprite.kill()
 
 
 class SoilLayer:
@@ -42,7 +48,7 @@ class SoilLayer:
         self.collision_sprites = collision_sprites
         self.soil_sprites = pygame.sprite.Group()
         self.water_sprites = pygame.sprite.Group()
-        self.plants = []
+        self.plant_sprites = pygame.sprite.Group()
 
         # graphics
         self.soil_surf = pygame.image.load('../graphics/soil/o.png')
@@ -132,13 +138,13 @@ class SoilLayer:
                 x = soil_sprite.rect.x // TILE_SIZE
                 y = soil_sprite.rect.y // TILE_SIZE
                 if 'P' not in self.grid[y][x]:
-                    self.plants.append(Plant(soil_sprite.rect, [self.all_sprites, self.collision_sprites], seed_type,
-                                             self.check_watered))
+                    Plant(soil_sprite.rect, [self.all_sprites, self.collision_sprites, self.plant_sprites], seed_type,
+                          self.check_watered)
                     # mark the soil as containing a plant
                     self.grid[y][x].append('P')
 
     def grow_plants(self):
-        for plant in self.plants:
+        for plant in self.plant_sprites:
             plant.grow()
 
     def check_watered(self, soil_patch_pos):
