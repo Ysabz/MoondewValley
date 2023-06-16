@@ -2,9 +2,50 @@ from random import randint, choice
 
 import pygame
 
-from settings import LAYERS
+from settings import *
 from sprites import Generic
+from timer import Timer
 from util import import_folder
+
+
+class Sky:
+    def __init__(self, reset):
+        self.display_surf = pygame.display.get_surface()
+        self.full_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.start_color = [255, 255, 255]
+        self.end_color = [38, 101, 189]
+        self.transition_sign = -1
+        self.dayTimer = Timer(120, self.reset_sky)
+        self.reset = reset
+
+    def display(self, dt):
+        for index, value in enumerate(self.end_color):
+            if (self.transition_sign == -1 and self.start_color[index] > value) or (
+                    self.transition_sign == 1 and self.start_color[index] < value):
+                self.start_color[index] += self.transition_sign * 15 * dt
+        self.dayTimer.update()
+        # check if already night
+        if (self.transition_sign == -1 and not self.dayTimer.active and self.start_color[0] <= self.end_color[0] and
+            self.start_color[1] <= self.end_color[1] and self.start_color[
+                2] <= self.end_color[2]) or (
+                self.transition_sign == 1 and not self.dayTimer.active and self.start_color[0] >= self.end_color[0] and
+                self.start_color[1] >= self.end_color[1] and self.start_color[2] >= self.end_color[2]):
+            self.dayTimer.activate()
+
+        self.full_surf.fill(self.start_color)
+        self.display_surf.blit(self.full_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+
+    def reset_sky(self):
+        if self.transition_sign == -1:
+            self.start_color = [38, 101, 189]
+            self.end_color = [255, 255, 255]
+            self.transition_sign = 1
+            self.reset()
+
+        else:
+            self.start_color = [255, 255, 255]
+            self.end_color = [38, 101, 189]
+            self.transition_sign = -1
 
 
 class Drop(Generic):

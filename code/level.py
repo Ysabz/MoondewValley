@@ -4,7 +4,7 @@ from pytmx.util_pygame import load_pygame
 from overlay import Overlay
 from player import Player
 from settings import *
-from sky import Rain
+from sky import Rain, Sky
 from soil import SoilLayer
 from sprites import Generic, Water, WildFlower, Tree, Interaction
 from transition import Transition
@@ -31,6 +31,7 @@ class Level:
         # sky
         self.rain = Rain(self.all_sprites)
         self.raining = True
+        self.sky = Sky(self.reset)
 
     def setup(self):
         tmx_data = load_pygame('../data/map.tmx')
@@ -86,6 +87,7 @@ class Level:
     def player_add(self, item):
         self.player.item_inventory[item] += 1
 
+    # when the sky gets dark enough, it should call the reset to start the new day
     def reset(self):
         # soil
         self.soil_layer.grow_plants()
@@ -106,6 +108,10 @@ class Level:
         self.all_sprites.custom_draw(self.player)
         self.all_sprites.update(dt)
         self.overlay.display()
+
+        # daytime
+        self.sky.display(dt)
+
         if self.player.sleep:
             self.transition.play()
 
