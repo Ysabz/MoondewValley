@@ -40,9 +40,8 @@ class Sky:
             self.start_color = [38, 101, 189]
             self.end_color = [255, 255, 255]
             self.transition_sign = 1
-            self.reset()
-
         else:
+            self.reset()
             self.start_color = [255, 255, 255]
             self.end_color = [38, 101, 189]
             self.transition_sign = -1
