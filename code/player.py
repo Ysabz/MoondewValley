@@ -12,7 +12,8 @@ from util import *
 #  Question why player is not inheriting the Generic?
 # TODO Player already has access to tree sprites so why using the level as an intermediary?
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group, all_sprites, collision_sprites, tree_sprites, interaction_sprite, soil_layer):
+    def __init__(self, pos, group, all_sprites, collision_sprites, tree_sprites, interaction_sprite, soil_layer,
+                 toggle_shop):
         super().__init__(group)
         self.all_sprites = all_sprites
         self.import_assets()
@@ -52,18 +53,24 @@ class Player(pygame.sprite.Sprite):
 
         # inventory
         self.item_inventory = {'wood': 0, 'apple': 0, 'corn': 0, 'tomato': 0}
+        self.seed_inventory = {'corn': 5, 'tomato': 5}
+        self.money = 200
 
         # interaction
         self.tree_sprites = tree_sprites
         self.interaction_sprites = interaction_sprite
         self.sleep = False
         self.soil_layer = soil_layer
+        self.toggle_shop = toggle_shop
 
     def get_target_pos(self):
         self.target_pos = self.rect.center + PLAYER_TOOL_OFFSET[self.dir]
 
+    # problem the seed is not planted but the inventory item is reduced
     def use_seed(self):
-        self.soil_layer.plant_seed(self.target_pos, self.selected_seed)
+        if self.seed_inventory[self.selected_seed] > 0:
+            if self.soil_layer.plant_seed(self.target_pos, self.selected_seed):
+                self.seed_inventory[self.selected_seed] -= 1
 
     def use_tool(self):
         if self.tools[self.tool_index] == 'hoe':

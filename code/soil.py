@@ -139,6 +139,8 @@ class SoilLayer:
                           self.check_watered)
                     # mark the soil as containing a plant
                     self.grid[y][x].append('P')
+                    return True
+        return False
 
     def grow_plants(self):
         for plant in self.plant_sprites:
