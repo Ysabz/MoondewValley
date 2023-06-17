@@ -153,8 +153,9 @@ class Player(pygame.sprite.Sprite):
             if keys[pygame.K_RETURN]:
                 collided_interaction_sprite = pygame.sprite.spritecollide(self, self.interaction_sprites, False)
                 if collided_interaction_sprite:
-                    if collided_interaction_sprite[0].name == 'Trade':
-                        pass
+                    if collided_interaction_sprite[0].name == 'Trader':
+                        self.toggle_shop()
+
                     elif collided_interaction_sprite[0].name == 'Bed':
                         self.status = '_idle'
                         self.dir = 'left'
@@ -174,8 +175,6 @@ class Player(pygame.sprite.Sprite):
         for sprite in self.collision_sprites.sprites():
             if hasattr(sprite, 'hitbox'):
                 if sprite.hitbox.colliderect(self.hitbox):
-                    # check for plants that are hit
-
                     if dir == 'horizontal':
                         if self.dir_vec.x > 0:  # moving to right
                             self.hitbox.right = sprite.hitbox.left

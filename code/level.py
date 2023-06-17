@@ -1,6 +1,7 @@
 import pygame
 from pytmx.util_pygame import load_pygame
 
+from menu import Menu
 from overlay import Overlay
 from player import Player
 from settings import *
@@ -32,6 +33,10 @@ class Level:
         self.rain = Rain(self.all_sprites)
         self.raining = True
         self.sky = Sky(self.reset)
+
+        # shop
+        self.shop_active = False
+        self.menu = Menu(self.player, self.toggle_shop)
 
     def setup(self):
         tmx_data = load_pygame('../data/map.tmx')
@@ -76,9 +81,12 @@ class Level:
             if obj.name == 'Start':
                 self.player = Player(
                     (obj.x, obj.y), self.all_sprites, self.all_sprites, self.collision_sprites, self.tree_sprites,
-                    self.interaction_sprites, self.soil_layer)
+                    self.interaction_sprites, self.soil_layer, self.toggle_shop)
 
             if obj.name == 'Bed':
+                Interaction((obj.x, obj.y), (obj.width, obj.height), self.interaction_sprites, obj.name)
+
+            if obj.name == 'Trader':
                 Interaction((obj.x, obj.y), (obj.width, obj.height), self.interaction_sprites, obj.name)
 
         Generic((0, 0), pygame.image.load('../graphics/world/ground.png').convert_alpha(), self.all_sprites,
@@ -86,6 +94,9 @@ class Level:
 
     def player_add(self, item):
         self.player.item_inventory[item] += 1
+
+    def toggle_shop(self):
+        self.shop_active = not self.shop_active
 
     # when the sky gets dark enough, it should call the reset to start the new day
     def reset(self):
@@ -102,11 +113,24 @@ class Level:
                 tree.create_fruit()
 
     def run(self, dt):
+        # drawing logic
         keys = pygame.key.get_pressed()
         self.display_surface.fill('black')
-        # self.all_sprites.draw(self.display_surface)
         self.all_sprites.custom_draw(self.player)
-        self.all_sprites.update(dt)
+
+        # updates
+        if self.shop_active:
+            self.menu.update()
+            self.raining = False
+        else:
+            self.all_sprites.update(dt)
+            # rain control
+            if keys[pygame.K_r] and not self.raining:
+                self.raining = True
+
+            if keys[pygame.K_s] and self.raining:
+                self.raining = False
+
         self.overlay.display()
 
         # daytime
@@ -115,12 +139,7 @@ class Level:
         if self.player.sleep:
             self.transition.play()
 
-        # rain control
-        if keys[pygame.K_r] and not self.raining:
-            self.raining = True
 
-        if keys[pygame.K_s] and self.raining:
-            self.raining = False
 
         if self.raining:
             self.rain.update()
