@@ -55,6 +55,9 @@ class SoilLayer:
         self.create_soil_grid()
         self.create_hit_rects()
 
+        self.plant_sound = pygame.mixer.Sound('../audio/plant.wav')
+        self.plant_sound.set_volume(0.2)
+
         # requirements
         # if the area is farmable
         # if the soil has been watered
@@ -135,6 +138,7 @@ class SoilLayer:
                 x = soil_sprite.rect.x // TILE_SIZE
                 y = soil_sprite.rect.y // TILE_SIZE
                 if 'P' not in self.grid[y][x]:
+                    self.plant_sound.play()
                     Plant(soil_sprite.rect, [self.all_sprites, self.collision_sprites, self.plant_sprites], seed_type,
                           self.check_watered)
                     # mark the soil as containing a plant

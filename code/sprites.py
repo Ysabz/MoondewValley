@@ -91,9 +91,16 @@ class Tree(Generic):
 
         self.player_add = player_add
 
+        # sounds
+        self.axe_sound = pygame.mixer.Sound('../audio/axe.mp3')
+
     # TODO fix the problem when multiple trees are being hit at the same time
     def damage(self):
         self.health -= 1
+
+        # play the axe sound
+        self.axe_sound.play()
+
         # remove apple when the tree is hit
         if len(self.apple_sprites.sprites()) > 0:
             random_apple = choice(self.apple_sprites.sprites())

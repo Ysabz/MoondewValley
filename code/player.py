@@ -63,6 +63,14 @@ class Player(pygame.sprite.Sprite):
         self.soil_layer = soil_layer
         self.toggle_shop = toggle_shop
 
+        # sounds
+        self.success = pygame.mixer.Sound('../audio/success.wav')
+        self.success.set_volume(0.2)
+        self.watering_sound = pygame.mixer.Sound('../audio/water.mp3')
+        self.watering_sound.set_volume(0.2)
+        self.hoe_sound = pygame.mixer.Sound('../audio/hoe.wav')
+        self.hoe_sound.set_volume(0.2)
+
     def get_target_pos(self):
         self.target_pos = self.rect.center + PLAYER_TOOL_OFFSET[self.dir]
 
@@ -74,12 +82,14 @@ class Player(pygame.sprite.Sprite):
 
     def use_tool(self):
         if self.tools[self.tool_index] == 'hoe':
+            self.hoe_sound.play()
             self.soil_layer.get_hit(self.target_pos)
         elif self.tools[self.tool_index] == 'axe':
             for tree in self.tree_sprites.sprites():
                 if tree.rect.collidepoint(self.target_pos):
                     tree.damage()
         elif self.tools[self.tool_index] == 'water':
+            self.watering_sound.play()
             self.soil_layer.water(self.target_pos)
 
     def import_assets(self):
@@ -171,7 +181,7 @@ class Player(pygame.sprite.Sprite):
             if keys[pygame.K_h]:
                 collided_plant_sprite = pygame.sprite.spritecollide(self, self.soil_layer.plant_sprites, False)
                 if collided_plant_sprite and collided_plant_sprite[0].fully_grown:
-                    self.item_inventory[collided_plant_sprite[0].type] += 1
+                    self.player_add(collided_plant_sprite[0].type)
                     Particle(collided_plant_sprite[0].rect.topleft, collided_plant_sprite[0].image, self.all_sprites,
                              LAYERS['main'])
                     self.soil_layer.grid[collided_plant_sprite[0].pos.y // TILE_SIZE][
@@ -222,6 +232,10 @@ class Player(pygame.sprite.Sprite):
     def update_timer(self):
         for timer in self.timers.values():
             timer.update()
+
+    def player_add(self, item):
+        self.item_inventory[item] += 1
+        self.success.play()
 
     def update(self, dt):
         self.input()
