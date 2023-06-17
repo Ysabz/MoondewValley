@@ -177,6 +177,7 @@ class Player(pygame.sprite.Sprite):
                         self.status = '_idle'
                         self.dir = 'left'
                         self.sleep = True
+            # problem the player can harvest multiple items with a single blow
             # harvest
             if keys[pygame.K_h]:
                 collided_plant_sprite = pygame.sprite.spritecollide(self, self.soil_layer.plant_sprites, False)
@@ -190,7 +191,7 @@ class Player(pygame.sprite.Sprite):
 
     def collision(self, dir):
         for sprite in self.collision_sprites.sprites():
-            if hasattr(sprite, 'hitbox'):
+            if hasattr(sprite, 'hitbox') and sprite.collidable:
                 if sprite.hitbox.colliderect(self.hitbox):
                     if dir == 'horizontal':
                         if self.dir_vec.x > 0:  # moving to right

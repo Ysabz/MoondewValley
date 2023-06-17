@@ -7,9 +7,10 @@ from timer import Timer
 
 
 class Generic(pygame.sprite.Sprite):
-    def __init__(self, pos, surf, groups, z=LAYERS['main'], is_centered=False):
+    def __init__(self, pos, surf, groups, z=LAYERS['main'], is_centered=False, collidable=True):
         super().__init__(groups)
         self.image = surf
+        self.collidable = collidable
         if is_centered:
             self.rect = self.image.get_rect(center=pos)
         else:

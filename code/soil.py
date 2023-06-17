@@ -22,7 +22,7 @@ class Plant(Generic):
         self.fully_grown = False
         self.age = 0
         self.check_watered = check_watered
-        super().__init__(pos_rect.center, self.frames[self.age], groups, LAYERS['ground plant'], True)
+        super().__init__(pos_rect.center, self.frames[self.age], groups, LAYERS['ground plant'], True, False)
 
     def grow(self):
         # if not fully grown and watered
@@ -33,9 +33,11 @@ class Plant(Generic):
             self.rect = self.image.get_rect(center=self.pos.center)
             if self.age >= len(self.frames) - 1:
                 self.fully_grown = True
+                self.collidable = True
+                self.groups()
             if int(self.age) > 0:
                 self.z = LAYERS['main']
-                self.hitbox = self.rect.copy().inflate(-26, -self.rect.height * 0.4)
+                self.hitbox = self.rect.copy().inflate(-self.rect.width * 0.7, -self.rect.height * 0.4)
 
 
 class SoilLayer:
