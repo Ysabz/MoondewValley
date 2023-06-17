@@ -44,6 +44,10 @@ class Menu:
         self.menu_top = SCREEN_HEIGHT / 2 - self.total_height / 2
         self.main_rect = pygame.Rect(SCREEN_WIDTH / 2 - self.width / 2, self.menu_top, self.width, self.total_height)
 
+        # buy or sell texts
+        self.buy_text = self.font.render('buy', False, 'Red')
+        self.sell_text = self.font.render('sell', False, 'Red')
+
     def input(self):
         # get input
         # if player presses escape close the menu
@@ -53,17 +57,35 @@ class Menu:
         if keys[pygame.K_ESCAPE]:
             self.toggle_menu()
 
-        if keys[pygame.K_UP] and not self.timer.active:
-            self.index -= 1
-            if self.index < 0:
-                self.index = len(self.options) - 1
-            self.timer.activate()
+        if not self.timer.active:
 
-        if keys[pygame.K_DOWN] and not self.timer.active:
-            self.index += 1
-            if self.index > len(self.options) - 1:
-                self.index = 0
-            self.timer.activate()
+            if keys[pygame.K_UP]:
+                self.index -= 1
+                if self.index < 0:
+                    self.index = len(self.options) - 1
+                self.timer.activate()
+
+            if keys[pygame.K_DOWN]:
+                self.index += 1
+                if self.index > len(self.options) - 1:
+                    self.index = 0
+                self.timer.activate()
+
+            if keys[pygame.K_SPACE]:
+                self.timer.activate()
+
+                # get item
+                current_item = self.options[self.index]
+
+                # sell
+                if self.index <= self.sell_border and self.player.item_inventory[current_item] > 0:
+                    self.player.item_inventory[current_item] -= 1
+                    self.player.money += SALE_PRICES[current_item]
+
+                # buy
+                if self.index > self.sell_border and self.player.money > PURCHASE_PRICES[current_item]:
+                    self.player.seed_inventory[current_item] += 1
+                    self.player.money -= PURCHASE_PRICES[current_item]
 
     def show_entry(self, text_surf, amount, top, selected):
         # background
@@ -81,6 +103,13 @@ class Menu:
         # show a black outline around the selected item
         if selected:
             pygame.draw.rect(self.display_surface, 'black', bg_rect, 4, 4)
+
+            if self.index > self.sell_border:
+                pos_rect = self.sell_text.get_rect(midleft=(self.main_rect.left + 150, bg_rect.centery))
+                self.display_surface.blit(self.buy_text, pos_rect)
+            else:
+                pos_rect = self.buy_text.get_rect(midleft=(self.main_rect.left + 150, bg_rect.centery))
+                self.display_surface.blit(self.sell_text, pos_rect)
 
     # Problem the sky transition should not affect the color of the menu
     def update(self):
