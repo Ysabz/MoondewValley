@@ -118,6 +118,9 @@ class Level:
         self.display_surface.fill('black')
         self.all_sprites.custom_draw(self.player)
 
+        # daytime ( sky is drawn first so the overlay appears just afterward
+        self.sky.display(dt)
+
         # updates
         if self.shop_active:
             self.menu.update()
@@ -131,15 +134,10 @@ class Level:
             if keys[pygame.K_s] and self.raining:
                 self.raining = False
 
-        self.overlay.display()
-
-        # daytime
-        self.sky.display(dt)
-
         if self.player.sleep:
             self.transition.play()
 
-
+        self.overlay.display()
 
         if self.raining:
             self.rain.update()

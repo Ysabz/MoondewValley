@@ -15,7 +15,7 @@ class Sky:
         self.start_color = [255, 255, 255]
         self.end_color = [38, 101, 189]
         self.transition_sign = -1
-        self.dayTimer = Timer(120, self.reset_sky)
+        self.dayTimer = Timer(120000, self.reset_sky)
         self.reset = reset
 
     def display(self, dt):

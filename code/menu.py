@@ -110,8 +110,6 @@ class Menu:
             else:
                 pos_rect = self.buy_text.get_rect(midleft=(self.main_rect.left + 150, bg_rect.centery))
                 self.display_surface.blit(self.sell_text, pos_rect)
-
-    # Problem the sky transition should not affect the color of the menu
     def update(self):
         self.input()
         self.display_money()
