@@ -17,12 +17,13 @@ class Sky:
         self.transition_sign = -1
         self.dayTimer = Timer(120000, self.reset_sky)
         self.reset = reset
+        self.speed = 1
 
     def display(self, dt):
         for index, value in enumerate(self.end_color):
             if (self.transition_sign == -1 and self.start_color[index] > value) or (
                     self.transition_sign == 1 and self.start_color[index] < value):
-                self.start_color[index] += self.transition_sign * 15 * dt
+                self.start_color[index] += self.transition_sign * self.speed * dt
         self.dayTimer.update()
         # check if already night
         if (self.transition_sign == -1 and not self.dayTimer.active and self.start_color[0] <= self.end_color[0] and

@@ -1,3 +1,5 @@
+from random import randint
+
 import pygame
 from pytmx.util_pygame import load_pygame
 
@@ -27,16 +29,22 @@ class Level:
 
         self.setup()
         self.overlay = Overlay(self.player)
-        self.transition = Transition(self.reset, self.player)
 
         # sky
         self.rain = Rain(self.all_sprites)
-        self.raining = True
+        self.raining = randint(0, 10) > 7
         self.sky = Sky(self.reset)
+
+        self.transition = Transition(self.reset, self.player, self.sky)
 
         # shop
         self.shop_active = False
         self.menu = Menu(self.player, self.toggle_shop)
+
+        # background music
+        self.background_music = pygame.mixer.Sound('../audio/bg.mp3')
+        self.background_music.set_volume(0.2)
+        self.background_music.play(loops=-1)
 
     def setup(self):
         tmx_data = load_pygame('../data/map.tmx')
@@ -59,11 +67,6 @@ class Level:
         water_frames = import_folder('../graphics/water')
         for x, y, surf in tmx_data.get_layer_by_name('Water').tiles():
             Water((x * TILE_SIZE, y * TILE_SIZE), water_frames, self.all_sprites)
-
-        # trees
-        for obj in tmx_data.get_layer_by_name('Trees'):
-            Tree((obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites, self.tree_sprites], obj.name,
-                 self.all_sprites, self.player_add)
 
         # wildflowers
         for obj in tmx_data.get_layer_by_name('Decoration'):
@@ -89,17 +92,19 @@ class Level:
             if obj.name == 'Trader':
                 Interaction((obj.x, obj.y), (obj.width, obj.height), self.interaction_sprites, obj.name)
 
+        # trees
+        for obj in tmx_data.get_layer_by_name('Trees'):
+            Tree((obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites, self.tree_sprites],
+                 obj.name, self.all_sprites, self.player.player_add)
         Generic((0, 0), pygame.image.load('../graphics/world/ground.png').convert_alpha(), self.all_sprites,
                 LAYERS['ground'])
-
-    def player_add(self, item):
-        self.player.item_inventory[item] += 1
 
     def toggle_shop(self):
         self.shop_active = not self.shop_active
 
     # when the sky gets dark enough, it should call the reset to start the new day
     def reset(self):
+        self.raining = randint(0, 10) > 7
         # soil
         self.soil_layer.grow_plants()
         self.soil_layer.remove_water()
@@ -119,29 +124,21 @@ class Level:
         self.all_sprites.custom_draw(self.player)
 
         # daytime ( sky is drawn first so the overlay appears just afterward
-        self.sky.display(dt)
+        if not self.player.sleep:
+            self.sky.display(dt)
 
         # updates
         if self.shop_active:
             self.menu.update()
-            self.raining = False
         else:
             self.all_sprites.update(dt)
-            # rain control
-            if keys[pygame.K_r] and not self.raining:
-                self.raining = True
-
-            if keys[pygame.K_s] and self.raining:
-                self.raining = False
+            if self.raining:
+                self.rain.update()
+                self.soil_layer.water_all()
+            self.overlay.display()
 
         if self.player.sleep:
-            self.transition.play()
-
-        self.overlay.display()
-
-        if self.raining:
-            self.rain.update()
-            self.soil_layer.water_all()
+            self.transition.play(dt)
 
 
 class CameraGroup(pygame.sprite.Group):
