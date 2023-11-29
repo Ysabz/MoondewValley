@@ -1,1 +1,1 @@
-# A game that is inspired by "stardew valley".
+# A game inspired by "Stardew Valley"
